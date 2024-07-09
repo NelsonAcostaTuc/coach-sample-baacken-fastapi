@@ -1,31 +1,79 @@
-from celery import shared_task, chain
+from celery import Celery
 import requests
-import json
-from datetime import datetime
-import logging
+from bs4 import BeautifulSoup
+import os
 
+celery = Celery(__name__, broker='pyamqp://guest@localhost//')
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+HTML_FILE_PATH = os.path.join(os.path.dirname(__file__), 'coursera_search_results.html')
 
-logger = logging.getLogger(__name__)
+@celery.task
+def fetch_html(query):
+    url = f"https://www.coursera.org/search?query={query}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        with open(HTML_FILE_PATH, "w", encoding="utf-8") as file:
+            file.write(response.text)
+        print("HTML saved successfully.")
+    else:
+        print(f"Error: {response.status_code}")
 
-
-@shared_task(bind=True, max_retries=3, default_retry_delay=5, name='app.tasks.fetch_weather_data')
-def fetch_weather_data(self):
-    try:
-        response = requests.get('https://api.open-meteo.com/v1/forecast', params={
-            'latitude': 35.6895,
-            'longitude': 139.6917,
-            'current_weather': 'true'
-        }, timeout=5)
-        response.raise_for_status()
+@celery.task
+def scrape_linkedin(query, location):
+    url = f"https://api.linkedin.com/v2/jobSearch?q={query}&location={location}"
+    headers = {
+        "Authorization": f"Bearer YOUR_API_KEY"
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
         data = response.json()
-        # Encadenar la tarea de guardar datos después de la de extracción
-        logger.info(f'Retrieved cars: {data}')
-        filename = "/app/data/weather_data.json"
-        with open(filename, 'w') as json_file:
-            json.dump(data, json_file)
-    except requests.exceptions.RequestException as exc:
-        self.retry(exc=exc)
+        # Procesar y guardar datos según necesidad
+        print(data)
+    else:
+        print(f"Error: {response.status_code}")
 
+@celery.task
+def scrape_coursera(query):
+    fetch_html(query)  # Fetch the HTML first
+    
+    # Verify the file exists before reading
+    if not os.path.exists(HTML_FILE_PATH):
+        return {"error": "HTML file not found"}
+    
+    with open(HTML_FILE_PATH, "r", encoding="utf-8") as file:
+        content = file.read()
+        
+    soup = BeautifulSoup(content, 'html.parser')
+
+    # Extract the title of the page
+    page_title = soup.title.string if soup.title else "No title found"
+    
+    # Extract meta description
+    meta_description = soup.find('meta', attrs={'name': 'description'})
+    meta_description_content = meta_description['content'] if meta_description else "No description found"
+
+    # Extract the first paragraph text as an example
+    first_paragraph = soup.find('p')
+    first_paragraph_text = first_paragraph.text if first_paragraph else "No paragraph found"
+    
+    # Debugging: print the extracted data
+    print(f"Page Title: {page_title}")
+    print(f"Meta Description: {meta_description_content}")
+    print(f"First Paragraph: {first_paragraph_text}")
+
+    data = {
+        'page_title': page_title,
+        'meta_description': meta_description_content,
+        'first_paragraph': first_paragraph_text
+    }
+
+    return data
+
+@celery.task
+def scrape_udemy(query):
+    url = f"https://www.udemy.com/courses/search/?q={query}"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    courses = soup.find_all('div', class_='course')
+    for course in courses:
+        print(course.text)

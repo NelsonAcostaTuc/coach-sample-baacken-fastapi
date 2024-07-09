@@ -1,11 +1,5 @@
 fastapi
 uvicorn
+celery
 requests
-python-dotenv
-pydantic
-databases
-pymysql
-celery==5.2.3
-redis==4.1.0
-fastapi-utils
-typing_inspect
+beautifulsoup4
