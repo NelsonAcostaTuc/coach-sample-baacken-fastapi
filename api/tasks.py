@@ -70,10 +70,49 @@ def scrape_coursera(query):
     return data
 
 @celery.task
-def scrape_udemy(query):
+def fetch_html_udemy(query):
     url = f"https://www.udemy.com/courses/search/?q={query}"
     response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    courses = soup.find_all('div', class_='course')
-    for course in courses:
-        print(course.text)
+    if response.status_code == 200:
+        with open(HTML_FILE_PATH, "w", encoding="utf-8") as file:
+            file.write(response.text)
+        print("HTML saved successfully.")
+    else:
+        print(f"Error: {response.status_code}")
+
+@celery.task
+def scrape_udemy(query):
+    fetch_html(query)  # Fetch the HTML first
+    
+    # Verify the file exists before reading
+    if not os.path.exists(HTML_FILE_PATH):
+        return {"error": "HTML file not found"}
+    
+    with open(HTML_FILE_PATH, "r", encoding="utf-8") as file:
+        content = file.read()
+        
+    soup = BeautifulSoup(content, 'html.parser')
+
+    # Extraer y mostrar el título de la página
+    page_title = soup.title.string if soup.title else 'No title found'
+    
+    # Extraer y mostrar la meta descripción
+    meta_description = soup.find('meta', attrs={'name': 'description'})
+    meta_description_content = meta_description['content'] if meta_description else 'No description found'
+    
+    # Extraer enlaces populares
+    popular_links = []
+    popular_topics = soup.select('div.js-side-nav-popular-topics a')
+    for link in popular_topics:
+        popular_links.append({
+            'text': link.get_text(strip=True),
+            'href': link['href']
+        })
+    
+    # Devolver la información extraída
+    result = {
+        'page_title': page_title,
+        'meta_description': meta_description_content,
+        'popular_links': popular_links
+    }
+    return result

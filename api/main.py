@@ -19,5 +19,5 @@ def start_coursera_scraping(query: str):
 
 @app.post("/scrape/udemy")
 def start_udemy_scraping(query: str):
-    scrape_udemy.delay(query)
-    return {"message": "Udemy scraping started"}
+    result = scrape_udemy(query)
+    return {"data": result}
