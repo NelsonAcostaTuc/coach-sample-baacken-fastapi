@@ -33,10 +33,11 @@ Este proyecto es una API de FastAPI para realizar scraping en Coursera. La API p
     uvicorn api.main:app --reload
     ```
 
-4. Realiza una solicitud POST a `/scrape/coursera` con el parámetro `query` para buscar cursos en Coursera:
+4. Realiza una solicitud POST a `/scrape/coursera` con el parámetro `query` para buscar cursos en Coursera o en Udemy:
 
     ```bash
     curl -X POST "http://127.0.0.1:8000/scrape/coursera" -d "query=machine+learning"
+    curl -X POST "http://127.0.0.1:8000/scrape/udemy" -d "query=machine+learning"
     ```
 
 5. La API devolverá información relevante sobre los cursos encontrados.
