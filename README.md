@@ -1,10 +1,10 @@
 # Web Scraping API for Coursera
 
-## Descripción
+## Description
 
-Este proyecto es una API de FastAPI para realizar scraping en Coursera. La API permite realizar búsquedas de cursos en Coursera y extraer información relevante de los resultados de búsqueda.
+This project is a FastAPI-based API for scraping Coursera. The API allows you to search for courses on Coursera and extract relevant information from the search results.
 
-## Requisitos
+## Requirements
 
 - Python 3.7+
 - FastAPI
@@ -13,39 +13,39 @@ Este proyecto es una API de FastAPI para realizar scraping en Coursera. La API p
 - Requests
 - BeautifulSoup
 
-## Instalación
+## Installation
 
-1. Crea y activa un entorno virtual:
+1. Create and activate a virtual environment:
 
     ```bash
     python -m venv env
-    source env/bin/activate  # En Windows: env\Scripts\activate
+    source env/bin/activate  # On Windows: env\Scripts\activate
     ```
 
-2. Instala las dependencias:
+2. Install the dependencies:
 
     ```bash
     pip install -r requirements.txt
     ```
-3. Inicia el servidor FastAPI:
+
+3. Start the FastAPI server:
 
     ```bash
     uvicorn api.main:app --reload
     ```
 
-4. Realiza una solicitud POST a `/scrape/coursera` con el parámetro `query` para buscar cursos en Coursera o en Udemy:
+4. Make a POST request to `/scrape/coursera` with the `query` parameter to search for courses on Coursera or Udemy:
 
     ```bash
     curl -X POST "http://127.0.0.1:8000/scrape/coursera" -d "query=machine+learning"
     curl -X POST "http://127.0.0.1:8000/scrape/udemy" -d "query=machine+learning"
     ```
 
-5. La API devolverá información relevante sobre los cursos encontrados.
+5. The API will return relevant information about the found courses.
 
-## Archivos
+## Files
 
-- `api/main.py`: Punto de entrada principal del API.
-- `api/tasks.py`: Funciones de scraping y tareas de Celery.
-- `requirements.txt`: Dependencias del proyecto.
-- `vercel.json`: Configuración para despliegue en Vercel (opcional).
-
+- `api/main.py`: Main entry point of the API.
+- `api/tasks.py`: Scraping functions and Celery tasks.
+- `requirements.txt`: Project dependencies.
+- `vercel.json`: Configuration for deployment on Vercel (optional).
